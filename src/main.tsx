@@ -1,4 +1,4 @@
-import { MyState } from "./MyState";
+import { MyState } from "./MyState.js";
 
 class Program {
   //1111111111111111111111111111111111111111111
@@ -645,6 +645,8 @@ class Program {
   }
 }
 
+debugger;
+
 //-----------------------
 //Step 1: Create new game
 //-----------------------
@@ -655,7 +657,7 @@ let program: Program = new Program();
 console.log(
   "Which heuristic to apply? (1= numOfMisplaced , 2= manhattanDistances)"
 );
-let chosen: string = "";
+let chosen: string = "1";
 program.chooseHeuristic(chosen);
 //-------------------------
 //Step 3: Formulate problem
