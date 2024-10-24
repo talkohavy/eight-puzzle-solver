@@ -1,17 +1,12 @@
 import { createMyState, MyState } from './MyState.js';
 import { Actions, AvailableActions, SpacePosition } from './types.js';
-import { smartEnqueueToStart } from './utils/smartEnqueueToStart.js';
-import { toShuffledArray } from './utils/toShuffledArray.js';
-
-function getRowNumber(convolutedIndex: number) {
-  return Math.floor(convolutedIndex / 3);
-}
-function getColNumber(convolutedIndex: number) {
-  return convolutedIndex % 3;
-}
+import { CUBE_SIZE, TILES_COUNT } from './utils/constants.js';
+import { getColNumberFromConvolutedIndex } from './utils/functions/getColNumberFromConvolutedIndex.js';
+import { getRowNumberFromConvolutedIndex } from './utils/functions/getRowNumberFromConvolutedIndex.js';
+import { smartEnqueueToStart } from './utils/functions/smartEnqueueToStart.js';
+import { toShuffledArray } from './utils/functions/toShuffledArray.js';
 
 class Program {
-  public cubeSize = 3;
   public goalState: Array<number> = [];
   public initialState: MyState;
   public numOfIteration: number;
@@ -35,7 +30,7 @@ class Program {
   }
 
   initNewPuzzle() {
-    this.goalState = Array.from(Array(9).keys());
+    this.goalState = Array.from(Array(TILES_COUNT).keys());
     this.goalState.shift();
     this.goalState.push(0);
 
@@ -43,8 +38,8 @@ class Program {
 
     const spaceIndexRaw: number = initialStateBoard.findIndex((num) => num === 0);
     const spacePosition: SpacePosition = {
-      row: getRowNumber(spaceIndexRaw),
-      col: getColNumber(spaceIndexRaw),
+      row: getRowNumberFromConvolutedIndex(spaceIndexRaw),
+      col: getColNumberFromConvolutedIndex(spaceIndexRaw),
     };
 
     const g: number = 0;
@@ -137,8 +132,8 @@ class Program {
   allValidActions(spacePosition: SpacePosition) {
     const validActions = {} as Actions;
     if (spacePosition.row > 0) validActions.up = true;
-    if (spacePosition.col + 1 < this.cubeSize) validActions.right = true;
-    if (spacePosition.row + 1 < this.cubeSize) validActions.down = true;
+    if (spacePosition.col + 1 < CUBE_SIZE) validActions.right = true;
+    if (spacePosition.row + 1 < CUBE_SIZE) validActions.down = true;
     if (spacePosition.col > 0) validActions.left = true;
 
     return validActions;
@@ -174,23 +169,23 @@ class Program {
       // -----------------------------------
       const generated = priorityQueue.shift() as MyState; // priorityQueue.DequeueHead().GetEntity();
       const curStateSpacePos: SpacePosition = generated.spacePosition;
-      const curStateSpacePosConvoluted = curStateSpacePos.row * 3 + curStateSpacePos.col;
+      const curStateSpacePosConvoluted = curStateSpacePos.row * CUBE_SIZE + curStateSpacePos.col;
 
       // ----------------------------
       // Step 5.2: Add to seen states
       // ----------------------------
-      seenStates[generated.id] = generated; // seenStates.add(generated);
+      seenStates[generated.id] = generated;
       // ------------------------------------
       // Step 5.3: Check if GoalState reached
       // ------------------------------------
       const generatedBoard: Array<number> = generated.board;
       if (this.isGoal(generatedBoard)) {
         console.log('Num of boards tested: %d.\n', this.numOfIteration);
-        this.solution = []; // new MyList<>();
+        this.solution = [];
         let curState: MyState = generated;
-        this.solution.unshift(curState); // this.solution.EnqueHead(curState); // insertion of goal-state.
+        this.solution.unshift(curState);
         while (curState.parent != null) {
-          this.solution.unshift(curState.parent); // this.solution.EnqueHead(curState.parent);
+          this.solution.unshift(curState.parent);
           curState = curState.parent;
         }
         this.endTime = Date.now();
@@ -209,7 +204,7 @@ class Program {
           generated.spacePosition,
           validAction as AvailableActions,
         );
-        const nextSpacePosConvoluted = nextSpacePos.row * 3 + nextSpacePos.col;
+        const nextSpacePosConvoluted = nextSpacePos.row * CUBE_SIZE + nextSpacePos.col;
         // D. Create next board
         const nextBoard: Array<number> = [...generatedBoard];
         nextBoard[curStateSpacePosConvoluted] = nextBoard[nextSpacePosConvoluted]!;
@@ -228,9 +223,8 @@ class Program {
         });
         // H. Check that this state wasn't seen before.
         if (!seenStates[nextState.id]) {
-          // seenStates.contains(nextState)
-          // I. Insert into priority queue
-          smartEnqueueToStart({ arr: priorityQueue, item: nextState, getValue: (item: MyState) => item.f }); // priorityQueue.SmartEnqueToTail(nextState);
+          // Insert into priority queue
+          smartEnqueueToStart({ arr: priorityQueue, item: nextState, getValue: (item: MyState) => item.f });
         }
       }
     }
@@ -262,7 +256,7 @@ class Program {
     // -------------
     const curBoard: Array<number> = [...curState.board];
     const curStateSpacePosition: SpacePosition = curState.spacePosition;
-    const curStateSpacePositionConvoluted = curStateSpacePosition.row * 3 + curStateSpacePosition.col;
+    const curStateSpacePositionConvoluted = curStateSpacePosition.row * CUBE_SIZE + curStateSpacePosition.col;
     // ---------------------------------
     // STEP 1: Did I reach a Goal-State?
     // ---------------------------------
@@ -326,7 +320,7 @@ class Program {
     // ---------------------
     while (fifoQueue.length > 0) {
       // STEP 5.1: Dequeue next state to check:
-      const nextState = fifoQueue.shift() as MyState; // fifoQueue.DequeHead().GetEntity();
+      const nextState = fifoQueue.shift() as MyState;
       // STEP 5.2: If branch doesn't EXCEED UB.
       if (nextState.f < this.UB) {
         // Try and test this action: (CONTINUE to Branch and Bound)
@@ -368,18 +362,6 @@ class Program {
         console.error('Something went terribly wrong...');
         return -100;
     }
-  }
-
-  public whatWasTheAction(state1: MyState, state2: MyState) {
-    if (state2.spacePosition.row < state1.spacePosition.row) return 0;
-
-    if (state2.spacePosition.col > state1.spacePosition.col) return 1;
-
-    if (state2.spacePosition.row > state1.spacePosition.row) return 2;
-
-    if (state2.spacePosition.col < state1.spacePosition.col) return 3;
-
-    return -999;
   }
 
   getInversionsCount(arr: Array<number>) {
