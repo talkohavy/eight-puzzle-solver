@@ -126,11 +126,6 @@
     // "skipDefaultLibCheck": true,                      /* Skip type checking .d.ts files that are included with TypeScript. */
   },
   "compileOnSave": true,
-  "exclude": [
-    "node_modules",
-    "**/node_modules/*",
-    "<node_internals>/**",
-    "bin/**"
-  ],
-  "include": ["src/main.tsx"]
+  "exclude": ["node_modules", "**/node_modules/*", "<node_internals>/**", "bin/**"],
+  "include": ["src"]
 }
