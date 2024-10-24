@@ -4,53 +4,62 @@ import { CUBE_SIZE, TILES_COUNT } from './utils/constants.js';
 import { getColNumberFromConvolutedIndex } from './utils/functions/getColNumberFromConvolutedIndex.js';
 import { getRowNumberFromConvolutedIndex } from './utils/functions/getRowNumberFromConvolutedIndex.js';
 import { smartEnqueueToStart } from './utils/functions/smartEnqueueToStart.js';
-import { toShuffledArray } from './utils/functions/toShuffledArray.js';
+// import { toShuffledArray } from './utils/functions/toShuffledArray.js';
 
 class Program {
-  public goalState: Array<number> = [];
-  public initialState: MyState;
+  public initialBoard: Array<number> = [];
+  public goalBoard: Array<number> = [];
   public numOfIteration: number;
   public solution: Array<MyState>;
   public startTime: number;
   public endTime: number;
-  private whichHeuristic: number; // 1= numOfMisplaced , 2= manhattanDistances
+  private whichHeuristic: number = 1; // 1= numOfMisplaced , 2= manhattanDistances
   // For Branch & Bound:
   private UB: number;
   seenStates: Record<string, MyState>;
 
   constructor() {
-    this.initialState = {} as MyState;
     this.numOfIteration = -1;
     this.solution = [];
     this.startTime = 0;
     this.endTime = 0;
-    this.whichHeuristic = 1;
     this.UB = 0;
     this.seenStates = {};
   }
 
   initNewPuzzle() {
-    this.goalState = Array.from(Array(TILES_COUNT).keys());
-    this.goalState.shift();
-    this.goalState.push(0);
+    this.goalBoard = this.createGoalBoard();
 
-    const initialStateBoard = toShuffledArray(this.goalState);
+    // this.initialBoard = toShuffledArray(this.goalBoard);
+    this.initialBoard = [5, 7, 3, 0, 6, 2, 1, 4, 8];
+  }
 
-    const spaceIndexRaw: number = initialStateBoard.findIndex((num) => num === 0);
+  public calculateInitialState() {
+    const spaceIndexRaw: number = this.initialBoard.findIndex((num) => num === 0);
     const spacePosition: SpacePosition = {
       row: getRowNumberFromConvolutedIndex(spaceIndexRaw),
       col: getColNumberFromConvolutedIndex(spaceIndexRaw),
     };
-
     const g: number = 0;
-    const h: number = this.calculateH(initialStateBoard);
-    this.initialState = createMyState({
-      board: initialStateBoard,
+    const h: number = this.calculateH(this.initialBoard);
+
+    const initialState = createMyState({
+      board: this.initialBoard,
       g,
       h,
       parent: null as any,
       spacePosition,
     });
+
+    return initialState;
+  }
+
+  createGoalBoard() {
+    const goalBoard = Array.from(Array(TILES_COUNT).keys());
+    goalBoard.shift();
+    goalBoard.push(0);
+
+    return goalBoard;
   }
 
   resetCurrentProblem() {}
@@ -63,7 +72,7 @@ class Program {
   public calculateMisplacedTilesCount(curBoard: Array<number>) {
     let wrong = 0;
     curBoard.forEach((currentNumber, index) => {
-      if (currentNumber > 0 && currentNumber !== this.goalState[index]) {
+      if (currentNumber > 0 && currentNumber !== this.goalBoard[index]) {
         wrong++;
       }
     });
@@ -94,8 +103,8 @@ class Program {
     return sumOfDistances;
   }
 
-  isGoal(curBoard: Array<number>) {
-    return curBoard.every((value, index) => value === this.goalState[index]);
+  isGoal(currentBoard: Array<number>) {
+    return currentBoard.every((value, index) => value === this.goalBoard[index]);
   }
 
   private getNextSpacePosition(spacePosition: SpacePosition, action: AvailableActions) {
@@ -140,49 +149,40 @@ class Program {
   }
 
   public solveUsingAStar() {
-    // ----------------------
-    // Step 1: Reset solution
-    // ----------------------
     this.solution = [];
-    // ----------------------------------------
-    // Step 2: Create a hash set of seen states
-    // ----------------------------------------
+
     const seenStates: Record<string, MyState> = {};
-    // -----------------------------
-    // Step 3: Create priority queue
-    // -----------------------------
     const priorityQueue: Array<MyState> = [];
-    // -------------------------------------
-    // Step 4: Insert initial state to queue
-    // -------------------------------------
-    smartEnqueueToStart<MyState>({ arr: priorityQueue, item: this.initialState, getValue: (item: MyState) => item.f });
-    //.unshift(); // priorityQueue.SmartEnqueueToTail(this.initialState);
-    // --------------------
-    // Step 5: Begin A* Run
-    // --------------------
+    const initialState = this.calculateInitialState();
+
+    smartEnqueueToStart<MyState>({ arr: priorityQueue, item: initialState, getValue: (item: MyState) => item.f });
+
+    // Begin A* Run
     this.numOfIteration = 0;
     this.startTime = Date.now();
+
     while (priorityQueue.length > 0) {
       this.numOfIteration++;
-      // -----------------------------------
-      // Step 5.1: Dequeue/Generate next state
-      // -----------------------------------
-      const generated = priorityQueue.shift() as MyState; // priorityQueue.DequeueHead().GetEntity();
-      const curStateSpacePos: SpacePosition = generated.spacePosition;
-      const curStateSpacePosConvoluted = curStateSpacePos.row * CUBE_SIZE + curStateSpacePos.col;
+      // Dequeue next state to handle
+      const currentState = priorityQueue.shift() as MyState;
 
-      // ----------------------------
-      // Step 5.2: Add to seen states
-      // ----------------------------
-      seenStates[generated.id] = generated;
-      // ------------------------------------
-      // Step 5.3: Check if GoalState reached
-      // ------------------------------------
-      const generatedBoard: Array<number> = generated.board;
-      if (this.isGoal(generatedBoard)) {
+      const {
+        id: currentStateId,
+        board: currentBoard,
+        spacePosition: currentSpacePosition,
+        g: currentGValue,
+      } = currentState;
+
+      const curStateSpacePosConvoluted = currentSpacePosition.row * CUBE_SIZE + currentSpacePosition.col;
+
+      // Add to seen states
+      seenStates[currentStateId] = currentState;
+
+      // Check if GoalState reached
+      if (this.isGoal(currentBoard)) {
         console.log('Num of boards tested: %d.\n', this.numOfIteration);
         this.solution = [];
-        let curState: MyState = generated;
+        let curState: MyState = currentState;
         this.solution.unshift(curState);
         while (curState.parent != null) {
           this.solution.unshift(curState.parent);
@@ -195,28 +195,27 @@ class Program {
       // Step 5.3: Expand possible next states
       // -------------------------------------
       // A. Check all possible valid actions
-      const validActions: Actions = this.allValidActions(generated.spacePosition);
-      //  U     R     D     L
-      //[true true false false]
+      const validActions: Actions = this.allValidActions(currentSpacePosition);
+
       for (const validAction in validActions) {
         // C. Get position of space of next state
         const nextSpacePos: SpacePosition = this.getNextSpacePosition(
-          generated.spacePosition,
+          currentSpacePosition,
           validAction as AvailableActions,
         );
         const nextSpacePosConvoluted = nextSpacePos.row * CUBE_SIZE + nextSpacePos.col;
         // D. Create next board
-        const nextBoard: Array<number> = [...generatedBoard];
+        const nextBoard: Array<number> = [...currentBoard];
         nextBoard[curStateSpacePosConvoluted] = nextBoard[nextSpacePosConvoluted]!;
         nextBoard[nextSpacePosConvoluted] = 0;
         // E. Calculate g
-        const g: number = generated.g + 1;
+        const g: number = currentGValue + 1;
         // F. Calculate h
         const h = this.calculateH(nextBoard);
         // G. Create next MyState(board,parent,g,h,spacePosRow,spacePosCol)
         const nextState = createMyState({
           board: nextBoard,
-          parent: generated,
+          parent: currentState,
           g,
           h,
           spacePosition: nextSpacePos,
@@ -233,33 +232,30 @@ class Program {
   // -------------------------------------
   // Method 13: Solve Using Branch & Bound
   // -------------------------------------
-  public solveUsingBB() {
-    // ----------------------
-    // Step 1: Reset solution
-    // ----------------------
-    this.solution = null as unknown as Array<MyState>;
-    // ---------------------------------
-    // Step 2: Reset list of seen states
-    // ---------------------------------
+  public solveUsingBranchAndBound() {
+    // Reset solution
+    this.solution = [];
+
+    // Reset list of seen states
     this.seenStates = {};
-    // --------------------------------
-    // Step 3: Begin Branch & Bound Run
-    // --------------------------------
+
+    // Begin Branch & Bound Run
     this.UB = 32;
     this.numOfIteration = 0;
     this.startTime = Date.now();
-    this.open(this.initialState);
+
+    const initialState = this.calculateInitialState();
+
+    this.open(initialState);
   }
 
   private open(curState: MyState) {
     this.numOfIteration++;
-    // -------------
+
     const curBoard: Array<number> = [...curState.board];
     const curStateSpacePosition: SpacePosition = curState.spacePosition;
     const curStateSpacePositionConvoluted = curStateSpacePosition.row * CUBE_SIZE + curStateSpacePosition.col;
-    // ---------------------------------
-    // STEP 1: Did I reach a Goal-State?
-    // ---------------------------------
+
     if (this.isGoal(curBoard)) {
       // A. Update Global UB
       this.UB = curState.g; /// or f
@@ -310,18 +306,14 @@ class Program {
       // H. Insert into queue
       const seen: boolean = this.checkIfSeen(nextState); // Double role: Also replaces!!!
 
-      if (!seen) {
-        fifoQueue.push(nextState); // fifoQueue.EnqueueTail(nextState);
-      }
+      if (!seen) fifoQueue.push(nextState);
     }
 
-    // ---------------------
-    // STEP 4: BACK-TRACKING
-    // ---------------------
+    // BACK-TRACKING
     while (fifoQueue.length > 0) {
-      // STEP 5.1: Dequeue next state to check:
+      // Dequeue next state to check:
       const nextState = fifoQueue.shift() as MyState;
-      // STEP 5.2: If branch doesn't EXCEED UB.
+      // If branch doesn't EXCEED UB.
       if (nextState.f < this.UB) {
         // Try and test this action: (CONTINUE to Branch and Bound)
         this.open(nextState);
@@ -333,11 +325,10 @@ class Program {
   }
 
   private checkIfSeen(someState: MyState) {
-    const prevState = this.seenStates[someState.id]; // seenStates.get(someState);
+    const prevState = this.seenStates[someState.id];
 
     if (prevState == null) {
-      // prevState does not exist...
-      this.seenStates[someState.id] = someState; // seenStates.put(someState,someState);
+      this.seenStates[someState.id] = someState;
       return false;
     }
 
@@ -365,19 +356,19 @@ class Program {
   }
 
   getInversionsCount(arr: Array<number>) {
-    let invCounter = 0;
-    for (let i = 0; i < 7; i++) {
-      for (let j = i + 1; j < 8; j++) {
+    let inversionsCount = 0;
+    for (let i = 0; i < TILES_COUNT - 2; i++) {
+      for (let j = i + 1; j < TILES_COUNT - 1; j++) {
         if (arr[i]! > 0 && arr[i]! > arr[j]!) {
-          invCounter++;
+          inversionsCount++;
         }
       }
     }
-    return invCounter;
+    return inversionsCount;
   }
 
   isSolvable(): boolean {
-    const inversionsCount = this.getInversionsCount(this.initialState.board);
+    const inversionsCount = this.getInversionsCount(this.initialBoard);
     const isInversionsCountEven = inversionsCount % 2 === 0;
 
     return isInversionsCountEven;
@@ -388,7 +379,7 @@ function runProgram() {
   const program: Program = new Program();
 
   program.initNewPuzzle();
-  program.printBoard(program.initialState.board);
+  program.printBoard(program.initialBoard);
 
   if (!program.isSolvable()) return console.log('Bad news... Puzzle is unsolvable.');
 
@@ -422,7 +413,7 @@ function runProgram() {
 
   // Solve with Branch & Bound
   console.log('Solving with Branch & Bound:');
-  program.solveUsingBB();
+  program.solveUsingBranchAndBound();
   // Display solution:
   if (program.solution == null) {
     console.log("The algorithm wasn't able to solve the puzzle...");

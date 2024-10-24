@@ -1,4 +1,4 @@
-import { getRandomIntegerBetween } from './getRandomIntegerBetween';
+import { getRandomIntegerBetween } from './getRandomIntegerBetween.js';
 
 function toShuffledArray(inputArr: Array<number>) {
   const newArray = [...inputArr];
@@ -6,8 +6,9 @@ function toShuffledArray(inputArr: Array<number>) {
   newArray.forEach((_, currentIndex) => {
     const differentIndex = getRandomIntegerBetween({ max: inputArr.length });
 
-    newArray[currentIndex] = newArray[differentIndex]!;
+    const temp = newArray[differentIndex]!;
     newArray[differentIndex] = newArray[currentIndex]!;
+    newArray[currentIndex] = temp;
   });
 
   return newArray;

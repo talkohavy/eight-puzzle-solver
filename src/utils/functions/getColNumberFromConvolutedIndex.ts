@@ -1,4 +1,4 @@
-import { CUBE_SIZE } from '../constants';
+import { CUBE_SIZE } from '../constants.js';
 
 function getColNumberFromConvolutedIndex(convolutedIndex: number) {
   return convolutedIndex % CUBE_SIZE;
