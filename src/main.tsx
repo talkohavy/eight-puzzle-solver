@@ -390,7 +390,7 @@ class Program {
     //---------------------------------
     //Step 2: Reset list of seen states
     //---------------------------------
-    this.seenStates = {}; // new HashMap<>();
+    this.seenStates = {};
     //--------------------------------
     //Step 3: Begin Branch & Bound Run
     //--------------------------------
@@ -414,32 +414,24 @@ class Program {
       this.UB = curState.g; ///or f
       console.log('Num of boards tested: %d. Solved in %d steps.\n', this.numOfIteration, this.UB);
       //B. Copy boards
-      this.solution = []; // new MyList<>();
-      this.solution.unshift(curState); // this.solution.EnqueueHead(curState); // insertion of goal-state.
+      this.solution = [];
+      this.solution.unshift(curState); // insertion of goal-state.
       while (curState.parent != null) {
-        this.solution.unshift(curState.parent); // solution.EnqueueHead(curState.parent);
+        this.solution.unshift(curState.parent);
         curState = curState.parent;
       }
       this.endTime = Date.now();
       return;
     }
-    //---------------------------------
-    //STEP 2: Reached time limit? Stop!
-    //---------------------------------
-    /*if (this.numOfIteration > maxIterations) {
-        this.didItStop = true;
-        return;
-    }*/
 
     //------------------------------------------------------
     //STEP 3: Expand all curState branches and calc their LB
     //------------------------------------------------------
-    const fifoQueue: Array<MyState> = []; //new MyList<>();
+    const fifoQueue: Array<MyState> = [];
     //How? Just say what happens if nextJob will be added NEXT.
     //A. Check all possible valid actions
     const actions = this.allValidActions(curState.spacePosition);
-    //  U     R     D     L
-    //[true true false false]
+
     for (const validAction in actions) {
       //C. Get position of space of next state
       const nextSpacePosition: SpacePosition = this.getNextSpacePosition(
@@ -554,32 +546,29 @@ class Program {
   }
 }
 
-//-----------------------
-//Step 1: Create new game
-//-----------------------
-const program: Program = new Program();
-//------------------------
-//Step 2: Choose heuristic (for both methods)
-//------------------------
-console.log('Which heuristic to apply? (1= numOfMisplaced , 2= manhattanDistances)');
-const chosen: string = '1';
-program.chooseHeuristic(chosen);
-//-------------------------
-//Step 3: Formulate problem
-//-------------------------
-program.initialize();
-//-----------------------
-//Step 4: to solve or not
-//-----------------------
-const tryToSolve: boolean = true;
-if (!program.isSolvable(program.initialState.board)) {
-  console.log('Bad news... Puzzle is unsolvable.\nWould you still try to solve?\n(1= Yes , 2= No)');
+function runProgram() {
+  //-----------------------
+  //Step 1: Create new game
+  //-----------------------
+  const program: Program = new Program();
+  //------------------------
+  //Step 2: Choose heuristic (for both methods)
+  //------------------------
+  console.log('Which heuristic to apply? (1= numOfMisplaced , 2= manhattanDistances)');
+  const chosen: string = '1';
+  program.chooseHeuristic(chosen);
+  //-------------------------
+  //Step 3: Formulate problem
+  //-------------------------
+  program.initialize();
+  //-----------------------
+  //Step 4: to solve or not
+  //-----------------------
 
-  return;
-} else {
+  if (!program.isSolvable(program.initialState.board)) return console.log('Bad news... Puzzle is unsolvable.');
+
   console.log('Good news! Puzzle is solvable!');
-}
-if (tryToSolve) {
+
   //---------------------
   //Step 4.1: Solve with A*
   //---------------------
@@ -587,30 +576,28 @@ if (tryToSolve) {
   program.solveUsingAStar();
   //Display solution:
   if (program.solution == null) {
-    console.log('This puzzle CANNOT be solved!');
+    console.log("The algorithm wasn't able to solve the puzzle...");
     console.log('Num of boards tested: %d.\n', program.numOfIteration);
-  } else {
-    console.log('A* solved 8-puzzle in %d moves.', program.solution.length - 1);
-    //Print initial state:
-    console.log('Initial State:');
-    //let iNod:MyState = program.solution.at(0) //program.solution.GetFirst();
-    const initialState = program.solution.at(0) as MyState; // MyState initialState = iNod.GetEntity();
-    program.printBoard(initialState.board);
-    // iNod = iNod.GetNext();
-    for (let i = 1; i < program.solution.length; i++) {
-      //Get state:
-      const curState = program.solution[i] as MyState; //  iNod.GetEntity();
-      //Get state's board:
-      const curBoard = curState.board;
-      //Print state's board:
-      console.log('Move number: %d\n', i);
-      program.printBoard(curBoard);
-      //Get nextState:
-      // iNod = iNod.GetNext();
-    }
-    const timeToSolve = program.endTime - program.startTime;
-    console.log('Time taken: ' + timeToSolve + 'ms\n');
+    return;
   }
+
+  console.log('A* solved 8-puzzle in %d moves.', program.solution.length - 1);
+  //Print initial state:
+  console.log('Initial State:');
+  const initialState = program.solution.at(0) as MyState;
+  program.printBoard(initialState.board);
+
+  for (let i = 1; i < program.solution.length; i++) {
+    //Get state:
+    const curState = program.solution[i] as MyState;
+    //Get state's board:
+    const curBoard = curState.board;
+    //Print state's board:
+    console.log('Move number: %d\n', i);
+    program.printBoard(curBoard);
+  }
+  const timeToSolve = program.endTime - program.startTime;
+  console.log('Time taken: ' + timeToSolve + 'ms\n');
 
   //---------------------------------
   //Step 4.2: Solve with Branch & Bound
@@ -642,7 +629,9 @@ if (tryToSolve) {
     }
     const timeToSolve = program.endTime - program.startTime;
     console.log('Time taken: ' + timeToSolve + 'ms\n');
-  }
 
-  console.log('Program ended.');
+    console.log('Program ended.');
+  }
 }
+
+runProgram();
