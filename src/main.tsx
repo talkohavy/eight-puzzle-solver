@@ -357,8 +357,8 @@ class Program {
 
   getInversionsCount(arr: Array<number>) {
     let inversionsCount = 0;
-    for (let i = 0; i < TILES_COUNT - 2; i++) {
-      for (let j = i + 1; j < TILES_COUNT - 1; j++) {
+    for (let i = 0; i < arr.length; i++) {
+      for (let j = i + 1; j < arr.length; j++) {
         if (arr[i]! > 0 && arr[i]! > arr[j]!) {
           inversionsCount++;
         }
@@ -391,7 +391,7 @@ function runProgram() {
   console.log('Solving with A*:');
   program.solveUsingAStar();
 
-  if (program.solution == null) {
+  if (program.solution.length === 0) {
     console.log("The algorithm wasn't able to solve the puzzle...");
     console.log('Num of boards tested: %d.\n', program.numOfIteration);
     return;
@@ -414,8 +414,8 @@ function runProgram() {
   // Solve with Branch & Bound
   console.log('Solving with Branch & Bound:');
   program.solveUsingBranchAndBound();
-  // Display solution:
-  if (program.solution == null) {
+
+  if (program.solution.length === 0) {
     console.log("The algorithm wasn't able to solve the puzzle...");
     console.log('Num of boards tested: ', program.numOfIteration);
     return;
