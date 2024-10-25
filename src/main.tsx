@@ -373,6 +373,30 @@ class Program {
 
     return isInversionsCountEven;
   }
+
+  printStepsToSolution() {
+    if (this.solution.length === 0) {
+      console.log("The algorithm wasn't able to solve the puzzle...");
+      console.log('Num of boards tested: %d.\n', this.numOfIteration);
+      return;
+    }
+
+    console.log('Solved 8-puzzle in %d moves.', this.solution.length - 1);
+
+    this.solution.forEach((solutionCurrentStep, moveNumber) => {
+      const currentBoard = solutionCurrentStep.board;
+
+      console.log('Move number: %d\n', moveNumber);
+
+      this.printBoard(currentBoard);
+    });
+  }
+
+  printTheTimeItTookToSolve() {
+    const timeToSolve = this.endTime - this.startTime;
+
+    console.log('Time taken: ' + timeToSolve + 'ms\n');
+  }
 }
 
 function runProgram() {
@@ -385,55 +409,15 @@ function runProgram() {
 
   console.log('Good news! Puzzle is solvable!');
 
-  // -------------
-  // Solve with A*
-  // -------------
   console.log('Solving with A*:');
   program.solveUsingAStar();
+  program.printStepsToSolution();
+  program.printTheTimeItTookToSolve();
 
-  if (program.solution.length === 0) {
-    console.log("The algorithm wasn't able to solve the puzzle...");
-    console.log('Num of boards tested: %d.\n', program.numOfIteration);
-    return;
-  }
-
-  console.log('A* solved 8-puzzle in %d moves.', program.solution.length - 1);
-
-  program.solution.forEach((solutionCurrentStep, moveNumber) => {
-    const currentBoard = solutionCurrentStep.board;
-
-    console.log('Move number: %d\n', moveNumber);
-
-    program.printBoard(currentBoard);
-  });
-
-  const timeToSolveUsingAStar = program.endTime - program.startTime;
-
-  console.log('Time taken: ' + timeToSolveUsingAStar + 'ms\n');
-
-  // Solve with Branch & Bound
   console.log('Solving with Branch & Bound:');
   program.solveUsingBranchAndBound();
-
-  if (program.solution.length === 0) {
-    console.log("The algorithm wasn't able to solve the puzzle...");
-    console.log('Num of boards tested: ', program.numOfIteration);
-    return;
-  }
-
-  console.log('Branch & Bound solved 8-puzzle in %d moves.\n', program.solution.length - 1);
-
-  // Print solution:
-  program.solution.forEach((solutionCurrentStep, moveNumber) => {
-    const currentBoard = solutionCurrentStep.board;
-
-    console.log('Move number: %d\n', moveNumber);
-
-    program.printBoard(currentBoard);
-  });
-
-  const timeToSolve = program.endTime - program.startTime;
-  console.log('Time taken: ' + timeToSolve + 'ms\n');
+  program.printStepsToSolution();
+  program.printTheTimeItTookToSolve();
 
   console.log('Program ended.');
 }
