@@ -5,35 +5,13 @@ type GetSpacePositionAfterActionProps = {
   action: AvailableActions;
 };
 
-export function getSpacePositionAfterAction(props: GetSpacePositionAfterActionProps) {
+export function getSpacePositionAfterAction(props: GetSpacePositionAfterActionProps): SpacePosition {
   const { spacePosition, action } = props;
 
-  const nextSpacePos = {} as SpacePosition;
+  if (action == AvailableActions.Up) return { row: spacePosition.row - 1, col: spacePosition.col };
+  if (action == AvailableActions.Down) return { row: spacePosition.row + 1, col: spacePosition.col };
+  if (action == AvailableActions.Left) return { row: spacePosition.row, col: spacePosition.col - 1 };
+  if (action == AvailableActions.Right) return { row: spacePosition.row, col: spacePosition.col + 1 };
 
-  switch (action) {
-    case AvailableActions.Up:
-      nextSpacePos.row = spacePosition.row - 1;
-      nextSpacePos.col = spacePosition.col;
-
-      break;
-    case AvailableActions.Right:
-      nextSpacePos.row = spacePosition.row;
-      nextSpacePos.col = spacePosition.col + 1;
-
-      break;
-    case AvailableActions.Down:
-      nextSpacePos.row = spacePosition.row + 1;
-      nextSpacePos.col = spacePosition.col;
-
-      break;
-    case AvailableActions.Left:
-      nextSpacePos.row = spacePosition.row;
-      nextSpacePos.col = spacePosition.col - 1;
-
-      break;
-    default:
-      console.log('Something went horribly wrong...');
-      break;
-  }
-  return nextSpacePos;
+  throw new Error('`action` must be one of AvailableActions');
 }
