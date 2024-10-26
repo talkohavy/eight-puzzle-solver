@@ -1,6 +1,6 @@
 import { Board } from '../../types.js';
 import { SPACE_VALUE } from '../constants.js';
-import { getSpacePositionFromBoard } from './getSpacePosition.js';
+import { getSpacePositionFromBoard } from './getSpacePositionFromBoard.js';
 
 type generateNextBoardProps = {
   currentBoard: Board;
