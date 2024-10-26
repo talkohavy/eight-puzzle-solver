@@ -1,24 +1,28 @@
-import { EightTilesPuzzle } from './models/EightTilesPuzzle/EightTilesPuzzle.js';
+import { solveUsingAStar } from './algorithms/aStar/aStar.js';
+import { createNewPuzzle } from './models/EightTilesPuzzle/logic/utils/createNewPuzzle.js';
+import { printBoard } from './models/EightTilesPuzzle/logic/utils/printBoard.js';
+import { isSolvable } from './utils/functions/isSolvable.js';
+import { printSolutionSummary } from './utils/functions/printSolutionSummary.js';
+import { printTheTimeItTookToSolve } from './utils/functions/printTheTimeItTookToSolve.js';
 
 function runProgram() {
-  const program: EightTilesPuzzle = new EightTilesPuzzle();
+  const puzzle = createNewPuzzle();
 
-  program.initNewPuzzle();
-  program.printBoard(program.initialBoard);
+  printBoard(puzzle);
 
-  if (!program.isSolvable()) return console.log('Bad news... Puzzle is unsolvable.');
+  if (!isSolvable(puzzle)) return console.log('Bad news... Puzzle is unsolvable.');
 
   console.log('Good news! Puzzle is solvable!');
 
   console.log('Solving with A*:');
-  program.solveUsingAStar();
-  program.printStepsToSolution();
-  program.printTheTimeItTookToSolve();
+  const aStarResults = solveUsingAStar(puzzle);
+  printSolutionSummary(aStarResults);
+  printTheTimeItTookToSolve({ name: 'a-star' });
 
-  console.log('Solving with Branch & Bound:');
-  program.solveUsingBranchAndBound();
-  program.printStepsToSolution();
-  program.printTheTimeItTookToSolve();
+  // console.log('Solving with Branch & Bound:');
+  // program.solveUsingBranchAndBound();
+  // program.printStepsToSolution();
+  // program.printTheTimeItTookToSolve();
 
   console.log('Program ended.');
 }
