@@ -43,3 +43,5 @@ export function createBoardState(props: CreateBoardStateProps): BoardState {
     spacePosition,
   };
 }
+
+export type Board = Array<number>;
