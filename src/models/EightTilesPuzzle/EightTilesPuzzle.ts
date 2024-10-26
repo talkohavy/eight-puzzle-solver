@@ -1,20 +1,19 @@
-import { createMyState, MyState } from './MyState.js';
-import { Actions, AvailableActions, SpacePosition } from './types.js';
-import { CUBE_SIZE, SPACE_VALUE, TILES_COUNT } from './utils/constants.js';
-import { getColNumberFromConvolutedIndex } from './utils/functions/getColNumberFromConvolutedIndex.js';
-import { getRowNumberFromConvolutedIndex } from './utils/functions/getRowNumberFromConvolutedIndex.js';
-import { smartEnqueueToStart } from './utils/functions/smartEnqueueToStart.js';
-import { toShuffledArray } from './utils/functions/toShuffledArray.js';
+import { BoardState, createBoardState, Actions, AvailableActions, SpacePosition } from './types.js';
+import { CUBE_SIZE, SPACE_VALUE, TILES_COUNT } from '../../utils/constants.js';
+import { getColNumberFromConvolutedIndex } from '../../utils/functions/getColNumberFromConvolutedIndex.js';
+import { getRowNumberFromConvolutedIndex } from '../../utils/functions/getRowNumberFromConvolutedIndex.js';
+import { smartEnqueueToStart } from '../../utils/functions/smartEnqueueToStart.js';
+import { toShuffledArray } from '../../utils/functions/toShuffledArray.js';
 
-class Program {
+export class EightTilesPuzzle {
   public initialBoard: Array<number> = [];
   public goalBoard: Array<number> = [];
   public iterationCount: number;
-  public solution: Array<MyState>;
+  public solution: Array<BoardState>;
   public startTime: number;
   public endTime: number;
   private whichHeuristic: number = 1; // 1= numOfMisplaced , 2= manhattanDistances
-  private seenStates: Record<string, MyState>;
+  private seenStates: Record<string, BoardState>;
   // For Branch & Bound:
   private UB: number;
 
@@ -42,7 +41,7 @@ class Program {
     const g: number = 0;
     const h: number = this.calculateH(this.initialBoard);
 
-    const initialState = createMyState({
+    const initialState = createBoardState({
       board: this.initialBoard,
       g,
       h,
@@ -157,7 +156,7 @@ class Program {
   public solveUsingAStar() {
     this.resetPuzzle();
 
-    const priorityQueue: Array<MyState> = [];
+    const priorityQueue: Array<BoardState> = [];
     const initialState = this.calculateInitialState();
     priorityQueue.push(initialState);
 
@@ -167,7 +166,7 @@ class Program {
     while (priorityQueue.length > 0) {
       this.iterationCount++;
 
-      const currentState = priorityQueue.shift() as MyState;
+      const currentState = priorityQueue.shift() as BoardState;
 
       const { board: currentBoard, spacePosition: currentSpacePosition, g: currentGValue } = currentState;
 
@@ -176,7 +175,7 @@ class Program {
       if (this.isGoal(currentBoard)) {
         console.log('Num of boards tested: %d.\n', this.iterationCount);
         this.solution = [];
-        let curState: MyState = currentState;
+        let curState: BoardState = currentState;
         this.solution.unshift(curState);
         while (curState.parent != null) {
           this.solution.unshift(curState.parent);
@@ -205,7 +204,7 @@ class Program {
 
         const h = this.calculateH(nextBoard);
 
-        const nextState = createMyState({
+        const nextState = createBoardState({
           board: nextBoard,
           parent: currentState,
           g,
@@ -216,7 +215,7 @@ class Program {
         // Check that this state wasn't seen before.
         if (!this.seenStates[nextState.id]) {
           this.seenStates[nextState.id] = nextState;
-          smartEnqueueToStart({ arr: priorityQueue, item: nextState, getValue: (item: MyState) => item.f });
+          smartEnqueueToStart({ arr: priorityQueue, item: nextState, getValue: (item: BoardState) => item.f });
         } else {
           const notStored = nextState;
           const alreadyStored = this.seenStates[nextState.id]!;
@@ -243,7 +242,7 @@ class Program {
     this.openState(initialState);
   }
 
-  private openState(curState: MyState) {
+  private openState(curState: BoardState) {
     this.iterationCount++;
 
     const curBoard: Array<number> = [...curState.board];
@@ -266,7 +265,7 @@ class Program {
     }
 
     // STEP 3: Expand all curState branches and calc their LB
-    const fifoQueue: Array<MyState> = [];
+    const fifoQueue: Array<BoardState> = [];
     // How? Just say what happens if nextJob will be added NEXT.
 
     const actions = this.getValidActionsForBoard(curState.spacePosition);
@@ -286,7 +285,7 @@ class Program {
 
       const h = this.calculateH(nextBoard);
 
-      const nextState: MyState = createMyState({
+      const nextState: BoardState = createBoardState({
         board: nextBoard,
         g,
         h,
@@ -303,7 +302,7 @@ class Program {
     // BACK-TRACKING
     while (fifoQueue.length > 0) {
       // Dequeue next state to check:
-      const nextState = fifoQueue.shift() as MyState;
+      const nextState = fifoQueue.shift() as BoardState;
       // If branch doesn't EXCEED UB.
       if (nextState.f < this.UB) {
         // Try and test this action: (CONTINUE to Branch and Bound)
@@ -315,7 +314,7 @@ class Program {
     }
   }
 
-  private checkIfSeen(someState: MyState) {
+  private checkIfSeen(someState: BoardState) {
     const prevState = this.seenStates[someState.id];
 
     if (prevState == null) {
@@ -393,28 +392,3 @@ class Program {
     console.log('Time taken: ' + timeToSolve + 'ms\n');
   }
 }
-
-function runProgram() {
-  const program: Program = new Program();
-
-  program.initNewPuzzle();
-  program.printBoard(program.initialBoard);
-
-  if (!program.isSolvable()) return console.log('Bad news... Puzzle is unsolvable.');
-
-  console.log('Good news! Puzzle is solvable!');
-
-  console.log('Solving with A*:');
-  program.solveUsingAStar();
-  program.printStepsToSolution();
-  program.printTheTimeItTookToSolve();
-
-  console.log('Solving with Branch & Bound:');
-  program.solveUsingBranchAndBound();
-  program.printStepsToSolution();
-  program.printTheTimeItTookToSolve();
-
-  console.log('Program ended.');
-}
-
-runProgram();
