@@ -1,9 +1,10 @@
 import { getColNumberFromConvolutedIndex } from '../../models/EightTilesPuzzle/logic/utils/getColNumberFromConvolutedIndex.js';
 import { getRowNumberFromConvolutedIndex } from '../../models/EightTilesPuzzle/logic/utils/getRowNumberFromConvolutedIndex.js';
 import { isSpaceTile } from '../../models/EightTilesPuzzle/logic/utils/isSpaceTile.js';
-import { Board, createBoardState, SpacePosition } from '../../models/EightTilesPuzzle/types.js';
+import { Board, SpacePosition } from '../../models/EightTilesPuzzle/types.js';
 import { Heuristic } from '../constants.js';
 import { calculateH } from './calculateH.js';
+import { createBoardState } from './createBoardState.js';
 
 export function generateInitialStateFromBoard(initialBoard: Board) {
   const spaceIndexConvoluted: number = initialBoard.findIndex(isSpaceTile);
