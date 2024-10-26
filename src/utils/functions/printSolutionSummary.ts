@@ -10,16 +10,16 @@ function detectActionFromSpacePositions(props: DetectActionFromSpacePositionsPro
   const { prevSpacePosition, currentSpacePosition } = props;
 
   if (prevSpacePosition.row === currentSpacePosition.row && prevSpacePosition.col > currentSpacePosition.col)
-    return AvailableActions.Left;
-
-  if (prevSpacePosition.row === currentSpacePosition.row && prevSpacePosition.col < currentSpacePosition.col)
     return AvailableActions.Right;
 
+  if (prevSpacePosition.row === currentSpacePosition.row && prevSpacePosition.col < currentSpacePosition.col)
+    return AvailableActions.Left;
+
   if (prevSpacePosition.row > currentSpacePosition.row && prevSpacePosition.col === currentSpacePosition.col)
-    return AvailableActions.Up;
+    return AvailableActions.Down;
 
   if (prevSpacePosition.row < currentSpacePosition.row && prevSpacePosition.col === currentSpacePosition.col)
-    return AvailableActions.Down;
+    return AvailableActions.Up;
 
   throw new Error('failed to detect Action from the 2 SpacePositions');
 }
@@ -43,17 +43,20 @@ export function printSolutionSummary(props: PrintSolutionSummaryProps) {
   solution.forEach((currentState, moveNumber) => {
     const { board, parent, spacePosition } = currentState;
 
-    const action = parent?.spacePosition
-      ? detectActionFromSpacePositions({
-          prevSpacePosition: parent.spacePosition,
-          currentSpacePosition: spacePosition,
-        })
-      : 'Initial State';
+    if (parent === null) {
+      console.log('\n----------');
+      console.log('Initial State:\n');
+      return printBoard(board);
+    }
 
-    console.log('Move number: %d\n', moveNumber);
-    console.log('Action:', action);
-    console.log('----------\n');
+    const action = detectActionFromSpacePositions({
+      prevSpacePosition: parent.spacePosition,
+      currentSpacePosition: spacePosition,
+    });
+    console.log(`Move ${moveNumber}: go`, action);
+    console.log('----------');
 
+    console.log('Result:\n');
     printBoard(board);
   });
 }
