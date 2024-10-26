@@ -9,16 +9,16 @@ type DetectActionFromSpacePositionsProps = {
 function detectActionFromSpacePositions(props: DetectActionFromSpacePositionsProps): AvailableActions {
   const { prevSpacePosition, currentSpacePosition } = props;
 
-  if (prevSpacePosition.row === currentSpacePosition.row && prevSpacePosition.col === currentSpacePosition.col + 1)
-    return AvailableActions.Right;
-
-  if (prevSpacePosition.row === currentSpacePosition.row && prevSpacePosition.col === currentSpacePosition.col - 1)
+  if (prevSpacePosition.row === currentSpacePosition.row && prevSpacePosition.col > currentSpacePosition.col)
     return AvailableActions.Left;
 
-  if (prevSpacePosition.row === currentSpacePosition.row + 1 && prevSpacePosition.col === currentSpacePosition.col)
+  if (prevSpacePosition.row === currentSpacePosition.row && prevSpacePosition.col < currentSpacePosition.col)
+    return AvailableActions.Right;
+
+  if (prevSpacePosition.row > currentSpacePosition.row && prevSpacePosition.col === currentSpacePosition.col)
     return AvailableActions.Up;
 
-  if (prevSpacePosition.row === currentSpacePosition.row - 1 && prevSpacePosition.col === currentSpacePosition.col)
+  if (prevSpacePosition.row < currentSpacePosition.row && prevSpacePosition.col === currentSpacePosition.col)
     return AvailableActions.Down;
 
   throw new Error('failed to detect Action from the 2 SpacePositions');
@@ -43,13 +43,15 @@ export function printSolutionSummary(props: PrintSolutionSummaryProps) {
   solution.forEach((currentState, moveNumber) => {
     const { board, parent, spacePosition } = currentState;
 
-    const action = detectActionFromSpacePositions({
-      prevSpacePosition: parent.spacePosition,
-      currentSpacePosition: spacePosition,
-    });
+    const action = parent?.spacePosition
+      ? detectActionFromSpacePositions({
+          prevSpacePosition: parent.spacePosition,
+          currentSpacePosition: spacePosition,
+        })
+      : 'Initial State';
 
     console.log('Move number: %d\n', moveNumber);
-    console.log('Action: %d\n', action);
+    console.log('Action:', action);
     console.log('----------\n');
 
     printBoard(board);
