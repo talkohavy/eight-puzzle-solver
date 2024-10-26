@@ -23,3 +23,8 @@ export type BoardState = {
 };
 
 export type Board = Array<number>;
+
+export type AlgoResults = {
+  solution: Array<BoardState>;
+  iterationsCount: number;
+};

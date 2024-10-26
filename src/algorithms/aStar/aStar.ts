@@ -1,16 +1,11 @@
 import { performance } from 'node:perf_hooks';
 import { getValidActionsForBoard } from '../../models/EightTilesPuzzle/logic/utils/getValidActionsForBoard.js';
 import { isGoalReached } from '../../models/EightTilesPuzzle/logic/utils/isGoalReached.js';
-import { Actions, AvailableActions, Board, BoardState } from '../../models/EightTilesPuzzle/types.js';
+import { AlgoResults, AvailableActions, Board, BoardState } from '../../models/EightTilesPuzzle/types.js';
 import { extractStepsToSolutionFromState } from '../../utils/functions/extractStepsToSolutionFromState.js';
 import { generateInitialStateFromBoard } from '../../utils/functions/generateInitialStateFromBoard.js';
 import { smartEnqueueToStart } from '../../utils/functions/smartEnqueueToStart.js';
 import { generateNextStateFromAction } from './logic/utils/generateNextStateFromAction.js';
-
-type AlgoResults = {
-  solution: Array<BoardState>;
-  iterationsCount: number;
-};
 
 export function solveUsingAStar(initialBoard: Board): AlgoResults {
   performance.mark('start-a-star');
@@ -35,7 +30,7 @@ export function solveUsingAStar(initialBoard: Board): AlgoResults {
       return { solution, iterationsCount };
     }
 
-    const validActions: Actions = getValidActionsForBoard(currentSpacePosition);
+    const validActions = getValidActionsForBoard(currentSpacePosition);
 
     // Expand possible next states
     for (const currentValidAction in validActions) {

@@ -1,4 +1,5 @@
 import { solveUsingAStar } from './algorithms/aStar/aStar.js';
+import { solveUsingBranchAndBound } from './algorithms/branchAndBound/branchAndBound.js';
 import { createNewPuzzle } from './models/EightTilesPuzzle/logic/utils/createNewPuzzle.js';
 import { printBoard } from './models/EightTilesPuzzle/logic/utils/printBoard.js';
 import { isSolvable } from './utils/functions/isSolvable.js';
@@ -20,9 +21,9 @@ function runProgram() {
   printTheTimeItTookToSolve({ name: 'a-star' });
 
   // console.log('Solving with Branch & Bound:');
-  // program.solveUsingBranchAndBound();
-  // program.printStepsToSolution();
-  // program.printTheTimeItTookToSolve();
+  const branchAndBoundResults = solveUsingBranchAndBound(puzzle);
+  printSolutionSummary(branchAndBoundResults);
+  // printTheTimeItTookToSolve({ name: 'branch-and-bound' });
 
   console.log('Program ended.');
 }
