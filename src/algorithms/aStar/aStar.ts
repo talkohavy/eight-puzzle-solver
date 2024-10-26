@@ -1,3 +1,4 @@
+import { performance } from 'node:perf_hooks';
 import { getValidActionsForBoard } from '../../models/EightTilesPuzzle/logic/utils/getValidActionsForBoard.js';
 import { isGoalReached } from '../../models/EightTilesPuzzle/logic/utils/isGoalReached.js';
 import { Actions, AvailableActions, Board, BoardState } from '../../models/EightTilesPuzzle/types.js';
@@ -12,6 +13,7 @@ type AlgoResults = {
 };
 
 export function solveUsingAStar(initialBoard: Board): AlgoResults {
+  performance.mark('start-a-star');
   const initialState = generateInitialStateFromBoard(initialBoard);
   const priorityQueue: Array<BoardState> = [initialState];
   const seenStates: Record<string, BoardState> = { [initialState.id]: initialState };
@@ -27,6 +29,8 @@ export function solveUsingAStar(initialBoard: Board): AlgoResults {
 
     if (isGoalReached(currentBoard)) {
       const solution = extractStepsToSolutionFromState(currentState);
+
+      performance.mark('end-a-star');
 
       return { solution, iterationsCount };
     }
@@ -48,6 +52,8 @@ export function solveUsingAStar(initialBoard: Board): AlgoResults {
       }
     }
   }
+
+  performance.mark('end-a-star');
 
   return { solution: [], iterationsCount };
 }
